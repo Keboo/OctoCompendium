@@ -1,0 +1,61 @@
+﻿<Page x:Class="OctoCompendium.Presentation.MatchResultPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="using:OctoCompendium.Presentation"
+      xmlns:utu="using:Uno.Toolkit.UI"
+      Background="{ThemeResource BackgroundBrush}">
+
+  <Grid utu:SafeArea.Insets="VisibleBounds">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <utu:NavigationBar Content="Match Results" />
+
+    <ListView Grid.Row="1"
+              ItemsSource="{Binding Matches}"
+              SelectedItem="{Binding SelectedMatch, Mode=TwoWay}"
+              SelectionMode="Single"
+              Padding="16">
+      <ListView.ItemTemplate>
+        <DataTemplate>
+          <Grid Padding="12" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Border Width="48" Height="48"
+                    Background="{ThemeResource SurfaceVariantBrush}"
+                    CornerRadius="8">
+              <TextBlock Text="🏷️" FontSize="24"
+                         HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+              <TextBlock Text="{Binding Sticker.Name}" FontWeight="SemiBold" />
+              <TextBlock Text="{Binding Sticker.Category}"
+                         Opacity="0.6" FontSize="12" />
+            </StackPanel>
+
+            <TextBlock Grid.Column="2"
+                       VerticalAlignment="Center"
+                       Opacity="0.7">
+              <Run Text="{Binding Confidence, Converter={StaticResource PercentConverter}}" />
+            </TextBlock>
+          </Grid>
+        </DataTemplate>
+      </ListView.ItemTemplate>
+    </ListView>
+
+    <Button Grid.Row="2"
+            Content="✅ Confirm Match"
+            Command="{Binding ConfirmMatchCommand}"
+            HorizontalAlignment="Stretch"
+            Margin="16"
+            Style="{StaticResource FilledButtonStyle}" />
+  </Grid>
+</Page>

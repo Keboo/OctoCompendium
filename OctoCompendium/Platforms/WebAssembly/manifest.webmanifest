@@ -1,0 +1,10 @@
+{
+  "background_color": "#ffffff",
+  "description": "OctoCompendium",
+  "display": "standalone",
+  "name": "OctoCompendium",
+  "short_name": "OctoCompendium",
+  "start_url": "/index.html",
+  "theme_color": "#ffffff",
+  "scope": "/"
+}
