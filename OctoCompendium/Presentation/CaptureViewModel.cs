@@ -103,10 +103,20 @@ public partial class CaptureViewModel : ObservableObject
                 return;
             }
 
+            // Copy to local storage so the match result page can display it
+            var localFolder = Windows.Storage.ApplicationData.Current.LocalFolder;
+            var capturesFolder = await localFolder.CreateFolderAsync("Captures", Windows.Storage.CreationCollisionOption.OpenIfExists);
+            var copy = await file.CopyAsync(capturesFolder, file.Name, Windows.Storage.NameCollisionOption.GenerateUniqueName);
+
             using var stream = await file.OpenStreamForReadAsync();
             var matches = await _matcher.MatchAsync(stream);
 
-            await _navigator.NavigateViewModelAsync<MatchResultViewModel>(this, data: matches);
+            var data = new MatchResultData
+            {
+                UploadedImagePath = copy.Path,
+                Matches = matches
+            };
+            await _navigator.NavigateViewModelAsync<MatchResultViewModel>(this, data: data);
         }
         catch (Exception ex)
         {

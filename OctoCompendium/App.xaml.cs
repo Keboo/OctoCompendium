@@ -75,7 +75,7 @@ public partial class App : Application
             new ViewMap(ViewModel: typeof(ShellViewModel)),
             new ViewMap<MainPage, CollectionViewModel>(),
             new ViewMap<CapturePage, CaptureViewModel>(),
-            new DataViewMap<MatchResultPage, MatchResultViewModel, IReadOnlyList<MatchResult>>()
+            new DataViewMap<MatchResultPage, MatchResultViewModel, MatchResultData>()
         );
 
         routes.Register(
