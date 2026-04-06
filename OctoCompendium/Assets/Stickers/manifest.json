@@ -679,7 +679,7 @@
     "Name": "Dojocat"
   },
   {
-    "ImageFileName": "Images/defunktocat.png",
+    "ImageFileName": "Images/defunktocat.jpg",
     "Id": "defunktocat",
     "EmbeddingIndex": 97,
     "Category": "Octodex",
@@ -826,7 +826,7 @@
     "Name": "Octdrey Catburn"
   },
   {
-    "ImageFileName": "Images/spectrocat.png",
+    "ImageFileName": "Images/spectrocat.jpg",
     "Id": "spectrocat",
     "EmbeddingIndex": 118,
     "Category": "Octodex",

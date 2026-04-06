@@ -8,31 +8,58 @@
   <Grid utu:SafeArea.Insets="VisibleBounds">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
       <RowDefinition />
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
     <utu:NavigationBar Content="Match Results" />
 
-    <ListView Grid.Row="1"
+    <!-- Uploaded image preview -->
+    <Border Grid.Row="1"
+            Margin="16,8"
+            CornerRadius="12"
+            Background="{ThemeResource SurfaceVariantBrush}"
+            HorizontalAlignment="Center"
+            MaxWidth="200" MaxHeight="200">
+      <Image x:Name="UploadedImage"
+             Stretch="Uniform" />
+    </Border>
+
+    <TextBlock Grid.Row="1"
+               Text="Your Photo"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Bottom"
+               Margin="0,0,0,12"
+               Opacity="0.6" FontSize="12" />
+
+    <!-- Match results list -->
+    <ListView Grid.Row="2"
               ItemsSource="{Binding Matches}"
               SelectedItem="{Binding SelectedMatch, Mode=TwoWay}"
               SelectionMode="Single"
               Padding="16">
+      <ListView.Header>
+        <TextBlock Text="Possible Matches"
+                   FontWeight="SemiBold"
+                   FontSize="14"
+                   Opacity="0.7"
+                   Margin="12,4,12,8" />
+      </ListView.Header>
       <ListView.ItemTemplate>
         <DataTemplate>
-          <Grid Padding="12" ColumnSpacing="12">
+          <Grid Padding="8" ColumnSpacing="12">
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="Auto" />
               <ColumnDefinition />
               <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <Border Width="48" Height="48"
+            <Border Width="56" Height="56"
                     Background="{ThemeResource SurfaceVariantBrush}"
                     CornerRadius="8">
-              <TextBlock Text="🏷️" FontSize="24"
-                         HorizontalAlignment="Center" VerticalAlignment="Center" />
+              <Image Source="{Binding StickerImageUri}"
+                     Stretch="UniformToFill" />
             </Border>
 
             <StackPanel Grid.Column="1" VerticalAlignment="Center">
@@ -51,7 +78,7 @@
       </ListView.ItemTemplate>
     </ListView>
 
-    <Button Grid.Row="2"
+    <Button Grid.Row="3"
             Content="✅ Confirm Match"
             Command="{Binding ConfirmMatchCommand}"
             HorizontalAlignment="Stretch"

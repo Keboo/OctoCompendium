@@ -13,14 +13,18 @@ public partial class MatchResultViewModel : ObservableObject
     [ObservableProperty]
     private MatchResult? selectedMatch;
 
+    [ObservableProperty]
+    private string? uploadedImagePath;
+
     public MatchResultViewModel(
         ICollectionService collection,
         INavigator navigator,
-        IReadOnlyList<MatchResult> matchResults)
+        MatchResultData data)
     {
         _collection = collection;
         _navigator = navigator;
-        Matches = matchResults;
+        Matches = data.Matches;
+        UploadedImagePath = data.UploadedImagePath;
         ConfirmMatchCommand = new AsyncRelayCommand(OnConfirmMatch, () => SelectedMatch is not null);
     }
 

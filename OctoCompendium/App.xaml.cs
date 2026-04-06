@@ -39,8 +39,12 @@ public partial class App : Application
                 .UseLocalization()
                 .ConfigureServices((context, services) =>
                 {
+                    // HTTP client for model downloads
+                    services.AddSingleton<HttpClient>();
+
                     // Matching services
                     services.AddSingleton<IEmbeddingStore, EmbeddingStore>();
+                    services.AddSingleton<IModelDownloadService, ModelDownloadService>();
                     services.AddSingleton<IStickerMatcher, StickerMatcher>();
 
                     // Collection service
@@ -71,7 +75,7 @@ public partial class App : Application
             new ViewMap(ViewModel: typeof(ShellViewModel)),
             new ViewMap<MainPage, CollectionViewModel>(),
             new ViewMap<CapturePage, CaptureViewModel>(),
-            new DataViewMap<MatchResultPage, MatchResultViewModel, IReadOnlyList<MatchResult>>()
+            new DataViewMap<MatchResultPage, MatchResultViewModel, MatchResultData>()
         );
 
         routes.Register(
