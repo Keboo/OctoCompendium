@@ -39,8 +39,12 @@ public partial class App : Application
                 .UseLocalization()
                 .ConfigureServices((context, services) =>
                 {
+                    // HTTP client for model downloads
+                    services.AddSingleton<HttpClient>();
+
                     // Matching services
                     services.AddSingleton<IEmbeddingStore, EmbeddingStore>();
+                    services.AddSingleton<IModelDownloadService, ModelDownloadService>();
                     services.AddSingleton<IStickerMatcher, StickerMatcher>();
 
                     // Collection service

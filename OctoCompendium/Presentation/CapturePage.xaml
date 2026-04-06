@@ -26,6 +26,21 @@
       <ProgressRing IsActive="{Binding IsProcessing}"
                     Height="48" Width="48"
                     HorizontalAlignment="Center" />
+
+      <!-- Model download UI -->
+      <StackPanel Visibility="{Binding IsModelMissing}"
+                  Spacing="12"
+                  HorizontalAlignment="Center">
+        <ProgressBar Value="{Binding DownloadProgress}"
+                     Maximum="1"
+                     Visibility="{Binding IsDownloading}"
+                     HorizontalAlignment="Stretch"
+                     MinWidth="240" />
+        <Button Content="⬇️ Download CLIP Model"
+                Command="{Binding DownloadModelCommand}"
+                HorizontalAlignment="Center"
+                Style="{StaticResource FilledButtonStyle}" />
+      </StackPanel>
     </StackPanel>
 
     <Button Grid.Row="2"

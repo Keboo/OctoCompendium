@@ -10,17 +10,18 @@ namespace OctoCompendium.Services.Matching;
 public class StickerMatcher : IStickerMatcher, IDisposable
 {
     private const int EmbeddingDimension = 512;
-    private const string ModelAssetPath = "Assets/Models/clip-image-encoder.onnx";
 
     private readonly IEmbeddingStore _embeddingStore;
+    private readonly IModelDownloadService _modelDownloadService;
     private readonly ILogger<StickerMatcher> _logger;
     private InferenceSession? _session;
 
     public bool IsReady => _session is not null;
 
-    public StickerMatcher(IEmbeddingStore embeddingStore, ILogger<StickerMatcher> logger)
+    public StickerMatcher(IEmbeddingStore embeddingStore, IModelDownloadService modelDownloadService, ILogger<StickerMatcher> logger)
     {
         _embeddingStore = embeddingStore;
+        _modelDownloadService = modelDownloadService;
         _logger = logger;
     }
 
@@ -30,11 +31,9 @@ public class StickerMatcher : IStickerMatcher, IDisposable
         {
             await _embeddingStore.LoadAsync();
 
-            var modelPath = Path.Combine(
-                Windows.ApplicationModel.Package.Current.InstalledLocation.Path,
-                ModelAssetPath);
+            var modelPath = _modelDownloadService.GetModelPath();
 
-            if (File.Exists(modelPath))
+            if (modelPath is not null)
             {
                 var options = new SessionOptions();
                 _session = new InferenceSession(modelPath, options);
@@ -42,7 +41,7 @@ public class StickerMatcher : IStickerMatcher, IDisposable
             }
             else
             {
-                _logger.LogWarning("CLIP model not found at {Path}. Matcher will not be available.", modelPath);
+                _logger.LogWarning("CLIP model not found. Matcher will not be available until the model is downloaded.");
             }
         }
         catch (Exception ex)

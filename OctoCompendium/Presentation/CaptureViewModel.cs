@@ -6,22 +6,70 @@ namespace OctoCompendium.Presentation;
 public partial class CaptureViewModel : ObservableObject
 {
     private readonly IStickerMatcher _matcher;
+    private readonly IModelDownloadService _modelDownloadService;
     private readonly INavigator _navigator;
 
     [ObservableProperty]
     private bool isProcessing;
 
     [ObservableProperty]
+    private bool isModelMissing;
+
+    [ObservableProperty]
+    private bool isDownloading;
+
+    [ObservableProperty]
+    private double downloadProgress;
+
+    [ObservableProperty]
     private string statusMessage = "Take a photo of a sticker to identify it.";
 
-    public CaptureViewModel(IStickerMatcher matcher, INavigator navigator)
+    public CaptureViewModel(IStickerMatcher matcher, IModelDownloadService modelDownloadService, INavigator navigator)
     {
         _matcher = matcher;
+        _modelDownloadService = modelDownloadService;
         _navigator = navigator;
         PickPhotoCommand = new AsyncRelayCommand(OnPickPhoto);
+        DownloadModelCommand = new AsyncRelayCommand(OnDownloadModel);
+        IsModelMissing = !_matcher.IsReady && !_modelDownloadService.IsModelAvailable;
     }
 
     public ICommand PickPhotoCommand { get; }
+    public ICommand DownloadModelCommand { get; }
+
+    private async Task OnDownloadModel()
+    {
+        try
+        {
+            IsDownloading = true;
+            DownloadProgress = 0;
+            StatusMessage = "Downloading CLIP model...";
+
+            var progress = new Progress<double>(p =>
+            {
+                DownloadProgress = p;
+                StatusMessage = $"Downloading CLIP model... {p:P0}";
+            });
+
+            await _modelDownloadService.DownloadModelAsync(progress);
+
+            StatusMessage = "Model downloaded. Initializing...";
+            await _matcher.InitializeAsync();
+
+            IsModelMissing = false;
+            StatusMessage = _matcher.IsReady
+                ? "Take a photo of a sticker to identify it."
+                : "Model downloaded but failed to load. Check logs for details.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Download failed: {ex.Message}";
+        }
+        finally
+        {
+            IsDownloading = false;
+        }
+    }
 
     private async Task OnPickPhoto()
     {
@@ -35,7 +83,8 @@ public partial class CaptureViewModel : ObservableObject
 
             if (!_matcher.IsReady)
             {
-                StatusMessage = "Matcher is not available. Please ensure the CLIP model (clip-image-encoder.onnx) is placed in the Assets/Models folder.";
+                IsModelMissing = true;
+                StatusMessage = "The CLIP model is required to scan stickers. Tap the button below to download it.";
                 return;
             }
 
