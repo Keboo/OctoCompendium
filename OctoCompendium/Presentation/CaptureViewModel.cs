@@ -1,5 +1,7 @@
 using OctoCompendium.Services.Collection;
 using OctoCompendium.Services.Matching;
+using Windows.Media.Capture;
+using Windows.Storage;
 
 namespace OctoCompendium.Presentation;
 
@@ -30,11 +32,13 @@ public partial class CaptureViewModel : ObservableObject
         _modelDownloadService = modelDownloadService;
         _navigator = navigator;
         PickPhotoCommand = new AsyncRelayCommand(OnPickPhoto);
+        TakePhotoCommand = new AsyncRelayCommand(OnTakePhoto);
         DownloadModelCommand = new AsyncRelayCommand(OnDownloadModel);
         IsModelMissing = !_matcher.IsReady && !_modelDownloadService.IsModelAvailable;
     }
 
     public ICommand PickPhotoCommand { get; }
+    public ICommand TakePhotoCommand { get; }
     public ICommand DownloadModelCommand { get; }
 
     private async Task OnDownloadModel()
@@ -75,16 +79,8 @@ public partial class CaptureViewModel : ObservableObject
     {
         try
         {
-            if (!_matcher.IsReady)
+            if (!await EnsureMatcherReady())
             {
-                StatusMessage = "Initializing matcher...";
-                await _matcher.InitializeAsync();
-            }
-
-            if (!_matcher.IsReady)
-            {
-                IsModelMissing = true;
-                StatusMessage = "The CLIP model is required to scan stickers. Tap the button below to download it.";
                 return;
             }
 
@@ -103,20 +99,7 @@ public partial class CaptureViewModel : ObservableObject
                 return;
             }
 
-            // Copy to local storage so the match result page can display it
-            var localFolder = Windows.Storage.ApplicationData.Current.LocalFolder;
-            var capturesFolder = await localFolder.CreateFolderAsync("Captures", Windows.Storage.CreationCollisionOption.OpenIfExists);
-            var copy = await file.CopyAsync(capturesFolder, file.Name, Windows.Storage.NameCollisionOption.GenerateUniqueName);
-
-            using var stream = await file.OpenStreamForReadAsync();
-            var matches = await _matcher.MatchAsync(stream);
-
-            var data = new MatchResultData
-            {
-                UploadedImagePath = copy.Path,
-                Matches = matches
-            };
-            await _navigator.NavigateViewModelAsync<MatchResultViewModel>(this, data: data);
+            await ProcessCapturedFile(file);
         }
         catch (Exception ex)
         {
@@ -126,5 +109,73 @@ public partial class CaptureViewModel : ObservableObject
         {
             IsProcessing = false;
         }
+    }
+
+    private async Task OnTakePhoto()
+    {
+        try
+        {
+            if (!await EnsureMatcherReady())
+            {
+                return;
+            }
+
+            IsProcessing = true;
+            StatusMessage = "Opening camera...";
+
+            var captureUI = new CameraCaptureUI();
+            var file = await captureUI.CaptureFileAsync(CameraCaptureUIMode.Photo);
+            if (file is null)
+            {
+                StatusMessage = "No photo captured.";
+                return;
+            }
+
+            StatusMessage = "Analyzing sticker...";
+            await ProcessCapturedFile(file);
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            IsProcessing = false;
+        }
+    }
+
+    private async Task<bool> EnsureMatcherReady()
+    {
+        if (!_matcher.IsReady)
+        {
+            StatusMessage = "Initializing matcher...";
+            await _matcher.InitializeAsync();
+        }
+
+        if (!_matcher.IsReady)
+        {
+            IsModelMissing = true;
+            StatusMessage = "The CLIP model is required to scan stickers. Tap the button below to download it.";
+            return false;
+        }
+
+        return true;
+    }
+
+    private async Task ProcessCapturedFile(StorageFile file)
+    {
+        var localFolder = ApplicationData.Current.LocalFolder;
+        var capturesFolder = await localFolder.CreateFolderAsync("Captures", CreationCollisionOption.OpenIfExists);
+        var copy = await file.CopyAsync(capturesFolder, file.Name, NameCollisionOption.GenerateUniqueName);
+
+        using var stream = await file.OpenStreamForReadAsync();
+        var matches = await _matcher.MatchAsync(stream);
+
+        var data = new MatchResultData
+        {
+            UploadedImagePath = copy.Path,
+            Matches = matches
+        };
+        await _navigator.NavigateViewModelAsync<MatchResultViewModel>(this, data: data);
     }
 }
