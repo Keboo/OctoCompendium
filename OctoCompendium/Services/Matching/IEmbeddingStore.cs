@@ -24,4 +24,14 @@ public interface IEmbeddingStore
     /// Total number of loaded stickers.
     /// </summary>
     int Count { get; }
+
+    /// <summary>
+    /// Whether embeddings have been loaded or generated.
+    /// </summary>
+    bool HasEmbeddings { get; }
+
+    /// <summary>
+    /// Sets the embedding data from externally-generated vectors and persists to local storage.
+    /// </summary>
+    Task SaveEmbeddingsAsync(float[] embeddings);
 }

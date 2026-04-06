@@ -37,6 +37,13 @@ public class StickerMatcher : IStickerMatcher, IDisposable
             {
                 var options = new SessionOptions();
                 _session = new InferenceSession(modelPath, options);
+
+                if (!_embeddingStore.HasEmbeddings && _embeddingStore.Count > 0)
+                {
+                    _logger.LogInformation("Embeddings not found. Generating from {Count} sticker images...", _embeddingStore.Count);
+                    await GenerateEmbeddingsAsync();
+                }
+
                 _logger.LogInformation("CLIP model loaded successfully. {Count} stickers indexed.", _embeddingStore.Count);
             }
             else
@@ -48,6 +55,44 @@ public class StickerMatcher : IStickerMatcher, IDisposable
         {
             _logger.LogError(ex, "Failed to initialize sticker matcher.");
         }
+    }
+
+    private async Task GenerateEmbeddingsAsync()
+    {
+        var stickers = _embeddingStore.Stickers;
+        var allEmbeddings = new float[stickers.Count * EmbeddingDimension];
+        var assetsPath = Path.Combine(
+            Windows.ApplicationModel.Package.Current.InstalledLocation.Path,
+            "Assets", "Stickers");
+
+        for (int i = 0; i < stickers.Count; i++)
+        {
+            var imagePath = Path.Combine(assetsPath, stickers[i].ImageFileName);
+            if (!File.Exists(imagePath))
+            {
+                _logger.LogWarning("Sticker image not found: {Path}", imagePath);
+                continue;
+            }
+
+            using var stream = File.OpenRead(imagePath);
+            var inputTensor = ImagePreprocessor.PreprocessImage(stream);
+            var tensor = new DenseTensor<float>(inputTensor, [1, 3, 224, 224]);
+
+            var inputs = new List<NamedOnnxValue>
+            {
+                NamedOnnxValue.CreateFromTensor("pixel_values", tensor)
+            };
+
+            using var results = _session!.Run(inputs);
+            var output = results.First().AsEnumerable<float>().ToArray();
+            Normalize(output);
+
+            var offset = stickers[i].EmbeddingIndex * EmbeddingDimension;
+            Array.Copy(output, 0, allEmbeddings, offset, EmbeddingDimension);
+        }
+
+        await _embeddingStore.SaveEmbeddingsAsync(allEmbeddings);
+        _logger.LogInformation("Generated and saved embeddings for {Count} stickers.", stickers.Count);
     }
 
     public Task<IReadOnlyList<MatchResult>> MatchAsync(Stream imageStream, int topN = 5)
