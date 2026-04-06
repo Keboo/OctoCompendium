@@ -27,6 +27,18 @@ public partial class CaptureViewModel : ObservableObject
     {
         try
         {
+            if (!_matcher.IsReady)
+            {
+                StatusMessage = "Initializing matcher...";
+                await _matcher.InitializeAsync();
+            }
+
+            if (!_matcher.IsReady)
+            {
+                StatusMessage = "Matcher is not available. Please ensure the CLIP model (clip-image-encoder.onnx) is placed in the Assets/Models folder.";
+                return;
+            }
+
             IsProcessing = true;
             StatusMessage = "Analyzing sticker...";
 
