@@ -43,11 +43,24 @@
       </StackPanel>
     </StackPanel>
 
-    <Button Grid.Row="2"
-            Content="📷 Choose Photo"
-            Command="{Binding PickPhotoCommand}"
-            HorizontalAlignment="Stretch"
-            Margin="16"
-            Style="{StaticResource FilledButtonStyle}" />
+    <Grid Grid.Row="2"
+          Margin="16"
+          ColumnSpacing="8">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+
+      <Button Content="📷 Take Photo"
+              Command="{Binding TakePhotoCommand}"
+              HorizontalAlignment="Stretch"
+              Style="{StaticResource FilledButtonStyle}" />
+
+      <Button Grid.Column="1"
+              Content="🖼️ Choose Photo"
+              Command="{Binding PickPhotoCommand}"
+              HorizontalAlignment="Stretch"
+              Style="{StaticResource FilledButtonStyle}" />
+    </Grid>
   </Grid>
 </Page>
