@@ -6,4 +6,13 @@ public sealed partial class MainPage : Page
     {
         this.InitializeComponent();
     }
+
+    protected override async void OnNavigatedTo(NavigationEventArgs e)
+    {
+        base.OnNavigatedTo(e);
+        if (DataContext is CollectionViewModel vm)
+        {
+            await vm.LoadCollectionAsync();
+        }
+    }
 }
